@@ -1,0 +1,90 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(ZParser)
+public class ZParser {
+    public static void main(String[] args) throws ParseException {
+        ZParser parser = new ZParser(System.in);
+        parser.Z();
+        System.out.println("Parsing successful!");
+    }
+}
+PARSER_END(ZParser)
+
+// Tokens
+TOKEN : {
+    <ID: ["A"-"Z"] (["a"-"z", "A"-"Z", "0"-"9"])* "_">
+    | <AT: "(" | ")">
+    | <AMP: "{" | "}">
+    | <DOLLAR: "+" | "*" | "/">
+    | <EQUALS: ">" | "<">
+}
+SKIP : {
+    " "  // Espace
+  | "\t" // Tabulation
+  | "\n" // Nouvelle ligne
+  | "\r" // Retour chariot
+}
+// Grammar rules
+void Z() :
+{}
+{
+    S() | <EOF> // Utilisation de <EOF> pour représenter la fin de l'entrée
+}
+
+void S() :
+{}
+{
+    LOOKAHEAD(B()) B() T() | LOOKAHEAD(B()) <AMP> A()
+}
+
+void A() :
+{}
+{
+    LOOKAHEAD(B())B() T() | <EQUALS> X()
+}
+
+void A_prime() :
+{}
+{
+    <AT> B() <EQUALS> X() | {}
+}
+
+void T() :
+{}
+{
+    <DOLLAR> A_prime() | <AMP> A() <EQUALS> X()
+}
+
+void X() :
+{}
+{
+     S() A_prime() | A_prime()
+}
+
+void B() :
+{}
+{
+    <EQUALS> Y() | <ID> F()
+}
+
+void B_prime() :
+{}
+{
+    <DOLLAR> A_prime() <ID> B_prime() 
+    |  <AMP> A() <EQUALS> Y() 
+    | {}
+}
+
+void F() :
+{}
+{
+   LOOKAHEAD(S()) S() B_prime() | LOOKAHEAD(B_prime())B_prime()
+}
+
+void Y() :
+{}
+{
+    LOOKAHEAD(S()) S() A_prime() <ID> B_prime() | LOOKAHEAD(A_prime()) A_prime() <ID> B_prime()
+}
