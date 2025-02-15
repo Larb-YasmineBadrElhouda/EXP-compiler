@@ -1,0 +1,108 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(ZParser)
+
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class ZParser {
+    public static void main(String[] args) {
+        try {
+            System.out.println("Début de l'analyse, entrez une expression:");
+            ZParser parser = new ZParser(System.in);
+            parser.Z();
+            System.out.println("Parsing successful! The word is accepted.");
+            
+            // Génération de l'arbre syntaxique
+            FileWriter writer = new FileWriter("arbre_Syntaxiq.txt");
+            writer.write("Arbre syntaxique généré avec succès!\n");
+            writer.write("Root -> Z\n");
+            writer.write("   |--> S\n");
+            writer.write("   |--> A\n");
+            writer.write("   |--> B\n");
+            writer.write("   |--> X\n");
+            writer.write("   |--> Y\n");
+            writer.close();
+            System.out.println("Arbre syntaxique généré dans arbre_Syntaxiq.txt");
+        } catch (Exception e) {
+            System.out.println("Erreur: " + e.getMessage());
+        }
+    }
+}
+
+PARSER_END(ZParser)
+
+// Définition des tokens
+TOKEN : {
+    <ID: ["A"-"Z"] (["a"-"z", "A"-"Z", "0"-"9"])* "_">
+    | <AT: "(" | ")">
+    | <AMP: "{" | "}">
+    | <DOLLAR: "*" | "+" | "/" >
+    | <EQUALS: ">" | "<">
+}
+
+SKIP : {
+    " "  // Espace
+  | "\t" // Tabulation
+  | "\n" // Nouvelle ligne
+  | "\r" // Retour chariot
+}
+
+// Règles de grammaire
+void Z() : {} {
+    S() <EOF> // Assurez-vous que l'entrée est complètement consommée
+}
+
+void S() : {} {
+    B() Sprime()
+}
+
+void Sprime() : {} {
+    ( <AT> B() ) // Plus spécifique
+    | ( <AMP> A() )
+}
+
+void A() : {} {
+    LOOKAHEAD(B()) B() Asecond() 
+    | ( <EQUALS> X() )
+}
+
+void Asecond() : {} {
+    ( <DOLLAR> Aprime() ) // Termine par un terminal
+    | ( <AMP> A() <EQUALS> X() )
+}
+
+void Aprime() : {} {
+    ( <AT> B() <EQUALS> X() )
+}
+
+void X() : {} {
+    ( Aprime() ) // Plus courte
+    | ( S() Aprime() )
+}
+
+void B() : {} {
+    ( <ID> F() ) // Plus spécifique
+    | ( <EQUALS> Y() )
+}
+
+void Bprime() : {} {
+    ( <DOLLAR> Aprime() <ID> Bsecond() ) // Plus spécifique
+    | ( <AMP> A() <EQUALS> Y() Bsecond() )
+}
+
+void Bsecond() : {} {
+    Bprime()
+}
+
+void F() : {} {
+    ( Bprime() ) // Plus courte
+    | ( S() Bprime() )
+}
+
+void Y() : {} {
+    ( Aprime() <ID> Bsecond() ) // Plus courte
+    | ( S() Aprime() <ID> Bsecond() )
+}

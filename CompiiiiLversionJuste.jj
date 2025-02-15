@@ -1,0 +1,90 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(ZParser)
+public class ZParser {
+    public static void main(String[] args) throws ParseException {
+        ZParser parser = new ZParser(System.in);
+        parser.Z();
+        System.out.println("Parsing successful!");
+    }
+}
+PARSER_END(ZParser)
+
+// Définition des tokens
+TOKEN : {
+    <ID: ["A"-"Z"] (["a"-"z", "A"-"Z", "0"-"9"])* "_">
+    | <AT: "(" | ")">
+    | <AMP: "{" | "}">
+    |< DOLLAR: "*" | "+" | "/" >
+    | <EQUALS: ">" | "<">
+}
+SKIP : {
+    " "  // Espace
+  | "\t" // Tabulation
+  | "\n" // Nouvelle ligne
+  | "\r" // Retour chariot
+}
+// Règles de grammaire
+void Z() : {} {
+    S() 
+}
+
+
+void S() : {} {
+    B() Sprime()
+}
+
+void Sprime() : {} {
+    <AT> B()
+    | <AMP> A()
+    // S' → ε (rien à faire ici)
+}
+
+void A() : {} {
+    LOOKAHEAD(B()) B() Asecond() 
+    | <EQUALS> X()
+}
+
+void Asecond() : {} {
+    <DOLLAR> Aprime()
+    | <AMP> A() <EQUALS> X()
+    // A'' → ε (rien à faire ici)
+}
+
+void Aprime() : {} {
+    <AT> B() <EQUALS> X()
+    // A' → ε (rien à faire ici)
+}
+
+void X() : {} {
+    S() Aprime()
+    | Aprime()
+}
+
+void B() : {} {
+    <EQUALS> Y()
+    | <ID> F()
+}
+
+void Bprime() : {} {
+    <DOLLAR> Aprime() <ID> Bsecond()
+    | <AMP> A() <EQUALS> Y() Bsecond()
+    // B' → ε (rien à faire ici)
+}
+
+void Bsecond() : {} {
+    Bprime()
+    // B'' → ε (rien à faire ici)
+}
+
+void F() : {} {
+    S() Bprime()
+    | Bprime()
+}
+
+void Y() : {} {
+    S() Aprime() <ID> Bsecond()
+    | Aprime() <ID> Bsecond()
+}
